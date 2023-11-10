@@ -1,83 +1,74 @@
-# Fungsi Main
-def main():
-    while True:
-        print("Pilih cipher yang ingin Anda gunakan:")
-        print("1. Caesar Cipher")
-        print("2. Vigenere Cipher")
-        print("3. Polyalphabet Cipher")
-        print("4. Hill Cipher")
-        print("5. Playfair Cipher")
-        print("6. Affine Cipher")
-        print("7. Keluar")
+# Fungsi untuk menemukan invers modular
+def modInverse(a, m):
+    m0 = m
+    y = 0
+    x = 1
 
-        choice = input("Masukkan nomor pilihan (1/2/3/4/5/6/7): ")
+    if m == 1:
+        return 0
 
-        if choice == '1':
-            text = input("Masukkan teks yang ingin dienkripsi/didekripsi: ")
-            shift = int(input("Masukkan jumlah pergeseran: "))
-            encrypted_text = caesar_cipher(text, shift)
-            print("Teks terenkripsi:", encrypted_text)
+    while a > 1:
+        q = a // m
+        t = m
 
-        elif choice == '2':
-            text = input("Masukkan teks yang ingin dienkripsi/didekripsi: ")
-            key = input("Masukkan kunci: ")
-            mode = input("Pilih mode ('encrypt' atau 'decrypt'): ").lower()
-            result = vigenere_cipher(text, key, mode)
-            print(f"Hasil {mode}ion: {result}")
+        m = a % m
+        a = t
+        t = y
 
-        elif choice == '3':
-            text = input("Masukkan teks yang ingin dienkripsi/didekripsi: ")
-            num_keys = int(input("Masukkan jumlah kunci: "))
-            keys = []
-            for i in range(num_keys):
-                key = input(f"Masukkan kunci ke-{i + 1}: ")
-                keys.append(key)
-            mode = input("Pilih mode ('encrypt' atau 'decrypt'): ").lower()
-            result = polyalphabetic_cipher(text, keys, mode)
-            print(f"Hasil {mode}ion: {result}")
+        y = x - q * y
+        x = t
 
-        elif choice == '4':
-            text = input("Masukkan teks yang ingin dienkripsi/didekripsi: ")
-            n = int(input("Masukkan ukuran matriks kunci (contoh: untuk matriks 2x2, masukkan 2): "))
-            key_matrix = []
-            print(f"Masukkan {n} baris matriks kunci (tiap baris dengan {n} angka, dipisahkan oleh spasi):")
-            for _ in range(n):
-                row = list(map(int, input().split()))
-                key_matrix.append(row)
-            key_matrix = np.array(key_matrix)
-            mode = input("Pilih mode ('encrypt' atau 'decrypt'): ").lower()
-            result = hill_cipher(text, key_matrix, mode)
-            print(f"Hasil {mode}ion: {result}")
+    if x < 0:
+        x = x + m0
 
-        elif choice == '5':
-            key = input("Masukkan kunci Playfair: ")
-            plaintext = input("Masukkan teks plaintext: ")
-            encrypted_text = encrypt_playfair(plaintext, key)
-            decrypted_text = decrypt_playfair(encrypted_text, key)
-            print("Plaintext: ", plaintext)
-            print("Encrypted: ", encrypted_text)
-            print("Decrypted: ", decrypted_text)
+    return x
 
-        elif choice == '6':
-            text = input("Masukkan teks yang ingin dienkripsi/didekripsi: ")
-            a = int(input("Masukkan nilai 'a' (integer): "))
-            b = int(input("Masukkan nilai 'b' (integer): "))
-            key = (a, b)
-            mode = input("Encrypt (e) atau Decrypt (d)?: ").lower()
+# Fungsi untuk mengenkripsi pesan
+def encrypt(text, key):
+    result = ""
 
-            if mode == "e":
-                mode = "encrypt"
-            elif mode == "d":
-                mode = "decrypt"
+    # Mengambil nilai a dan b dari kunci
+    a = key[0]
+    b = key[1]
 
-            result = affine_cipher(text, key, mode)
-            print(f"{mode.capitalize()}ed Text: {result}")
-
-        elif choice == '7':
-            break  # Keluar dari program
-
+    for char in text:
+        if char.isalpha():
+            # Mengenkripsi hanya huruf alfabet
+            if char.islower():
+                result += chr(((a * (ord(char) - ord('a')) + b) % 26) + ord('a'))
+            else:
+                result += chr(((a * (ord(char) - ord('A')) + b) % 26) + ord('A'))
         else:
-            print("Pilihan tidak valid.")
+            result += char
 
-if __name__ == "__main__":
-    main()
+    return result
+
+# Fungsi untuk mendekripsi pesan
+def decrypt(text, key):
+    result = ""
+    
+    a = key[0]
+    b = key[1]
+    a_inv = modInverse(a, 26) # Menghitung invers modular dari a
+
+    for char in text:
+        if char.isalpha():
+            if char.islower():
+                result += chr(((a_inv * (ord(char) - ord('a') - b)) % 26) + ord('a'))
+            else:
+                result += chr(((a_inv * (ord(char) - ord('A') - b)) % 26) + ord('A'))
+        else:
+            result += char
+
+    return result
+
+# Contoh penggunaan
+pesan = "Ini adalah pesan rahasia"
+kunci = (5, 7)  # Nilai a dan b
+
+pesan_terenkripsi = encrypt(pesan, kunci)
+pesan_terdekripsi = decrypt(pesan_terenkripsi, kunci)
+
+print("Pesan Asli:", pesan)
+print("Pesan Terenkripsi:", pesan_terenkripsi)
+print("Pesan Terdekripsi:", pesan_terdekripsi)
